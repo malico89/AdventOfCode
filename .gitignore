@@ -19,3 +19,9 @@ obj/Debug/net9.0/AdventOfCode.dll
 obj/Debug/net9.0/AdventOfCode.pdb
 obj/Debug/net9.0/ref/AdventOfCode.dll
 obj/Debug/net9.0/refint/AdventOfCode.dll
+inputs/.DS_Store
+*.dll
+*.cache
+*.pdb
+*.bin
+

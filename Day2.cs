@@ -16,8 +16,8 @@ namespace AdventOfCode
             this.inputFile = inputFile;
             this.NumLines = 0;
             this.Solution = 0;
-            InputPart1Parser();
-            //InputPart2Parser();
+            //InputPart1Parser();
+            InputPart2Parser();
         }
         
         public string Part1Solver()
@@ -31,7 +31,7 @@ namespace AdventOfCode
             return this.Solution.ToString();
         }
 
-        private int IsReportValid(List<int> nums, bool useDampener = false)
+        private bool IsReportValid(List<int> nums)
         {
             // return 1 if valid (all increasing/decreasing and 1-2 apart)
             bool validLine = true;
@@ -62,20 +62,33 @@ namespace AdventOfCode
                     break;
                 }
             }
-
-            if (!validLine && useDampener)  // if not valid on first pass and want to use dampener
-            {
-                validLine = IsReportValidWithDampener(nums);
-            }
-
-            int result = validLine ? 1 : 0;
-            return result;
+            return validLine;
         }
 
         private bool IsReportValidWithDampener(List<int> nums)
         {
-            // same as part 1, but now we can remove one digit to make it safe
-            return false;
+            // checks if line is valid, and if not does the same for slices
+            bool validLine  = false;
+            if (!IsReportValid(nums))
+            {
+                // check list slices until one is valid
+                for (int i = 0; i < nums.Count; i++)
+                {
+                    List<int> numSubset = nums.ToList();
+                    numSubset.RemoveAt(i);
+                    //Console.WriteLine("line not valid, checking this subline: " + string.Join(", ", numSubset));
+                    if (IsReportValid(numSubset))
+                    {
+                        validLine = true;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                validLine = true;
+            }
+            return validLine;
         }
 
         public void InputPart1Parser()
@@ -95,7 +108,8 @@ namespace AdventOfCode
                             nums.Add(n);
                     }
                     //Console.WriteLine($"Line {this.NumLines}: {IsReportValid(nums)}");
-                    this.Solution += IsReportValid(nums);
+                    if (IsReportValid(nums))
+                        this.Solution++;
                 }
             }
         }
@@ -116,8 +130,9 @@ namespace AdventOfCode
                         if (int.TryParse(num, out int n))
                             nums.Add(n);
                     }
-
-                    this.Solution += IsReportValid(nums, true);
+                    
+                    if (IsReportValidWithDampener(nums))
+                        this.Solution++;
                 }
             }
         }
