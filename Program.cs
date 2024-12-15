@@ -17,11 +17,12 @@ namespace AdventOfCode
                 // uncomment the day you want to solve
                 //Day1 solution = new Day1(inputFile);
                 //Day2 solution = new Day2(inputFile);
-                Day3 solution = new Day3(inputFile);
+                //Day3 solution = new Day3(inputFile);
+                Day4 solution = new Day4(inputFile);
 
                 // uncomment for whatever part you want to solve
-                //Console.WriteLine($"Part 1 Solution: {solution.Part1Solver()}");
-                Console.WriteLine($"Part 2 Solution: {solution.Part2Solver()}");
+                Console.WriteLine($"Part 1 Solution: {solution.Part1Solver()}");
+                //Console.WriteLine($"Part 2 Solution: {solution.Part2Solver()}");
             }
         }
     }

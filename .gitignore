@@ -25,3 +25,6 @@ inputs/.DS_Store
 *.pdb
 *.bin
 
+bin/Debug/net9.0/AdventOfCode.pdb
+bin/Debug/net9.0/AdventOfCode.dll
+/obj

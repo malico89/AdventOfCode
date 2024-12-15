@@ -13,12 +13,14 @@ namespace AdventOfCode
         private string pattern = @"mul\(\d+,\d+\)";
         private string stopPattern = "don't()";
         private string startPattern = "do()";
-        private bool calcEnabled = true;
+        private string flagPattern = @"do(n't)?\(\)";
+        private bool calcEnabled {get; set;}
 
         public Day3(string inputFile)
         {
             this.inputFile = inputFile;
             this.Solution = 0;
+            this.calcEnabled = true;
             //InputPart1Parser();
             InputPart2Parser();
         }
@@ -33,38 +35,58 @@ namespace AdventOfCode
             return this.Solution.ToString();
         }
 
-        private List<string> ParseOnSegments(string line, bool isEnabled)
+        private List<string> ParseOnSegments(string line)
         {
             // takes a string and returns the "on" substrings based on do/don't found
             // bool tells you what to do about the start of the line
             List<string> onSegments = new List<string>();
             int currentIndex = 0;   // start of on if ON, otherwise update to the next do()
 
-            // find indices of dos and donts
-            List<int> dos = new List<int>();
-            int index = line.IndexOf(startPattern);
-            while (index != -1)
-            {
-                dos.Add(index);
-                index = line.IndexOf(startPattern, index + 1); // Search from the next position
-            }
-            Console.WriteLine("do() indices: " + string.Join(", ", dos));
+            MatchCollection matches = Regex.Matches(line, flagPattern);
 
-            List<int> donts = new List<int>();
-            index = line.IndexOf(stopPattern);
-            while (index != -1)
+            foreach (Match match in matches)
             {
-                donts.Add(index);
-                index = line.IndexOf(stopPattern, index + 1); // Search from the next position
+                // do()
+                if (string.Compare(match.Value, startPattern) == 0)
+                {
+                    // if this was off, turn on calcs and update the current index
+                    if (!calcEnabled)
+                    {
+                        calcEnabled = true;
+                        currentIndex = match.Index;
+                    }
+                }
+                // don't()
+                else if (string.Compare(match.Value, stopPattern) == 0)
+                {
+                    // end the current substring if already enabled
+                    if (calcEnabled)
+                    {
+                        calcEnabled = false;
+                        string subsegment = line.Substring(currentIndex, match.Index - currentIndex);
+                        currentIndex = match.Index;     // update index to the don't location, but not needed...
+                        Console.WriteLine($"added this ON segment: {subsegment}");
+                        onSegments.Add(subsegment);
+                    }
+                }
             }
-            Console.WriteLine("don't() indices: " + string.Join(", ", donts));
+            // now handle the rest of the string, only add if do()
+            if (calcEnabled)
+            {
+                string subsegment = line.Substring(currentIndex, line.Length - currentIndex);
+                Console.WriteLine($"added this ON segment: {subsegment}");
+                onSegments.Add(subsegment);
+            }
 
-            // TODO: parse the string into multipliable chunks
-            /* the stuff above is a start, it gives all indices but then you have to sort and figure them out
-            one way: until you get to the end of the string, like above, if it's on, find the next dont to know where to stop and turn it off
-            if it's off, look for next do to know where to start again and turn it on
-            remember the indices to know how to chunk it
-            */
+            // // find indices of dos and donts
+            // List<int> dos = new List<int>();
+            // int index = line.IndexOf(startPattern);
+            // while (index != -1)
+            // {
+            //     dos.Add(index);
+            //     index = line.IndexOf(startPattern, index + 1); // Search from the next position
+            // }
+            // Console.WriteLine("do() indices: " + string.Join(", ", dos));
 
             return onSegments;
         }
@@ -128,7 +150,7 @@ namespace AdventOfCode
                 while ((line = sr.ReadLine()) != null)
                 {
                     // for each line pass the chunks that have multiply enabled
-                    List<string> segmentsToCalc = ParseOnSegments(line, calcEnabled);
+                    List<string> segmentsToCalc = ParseOnSegments(line);
                     foreach (string segment in segmentsToCalc)
                     {
                         List<string> chunks = ParseLineForPattern(segment, pattern);
