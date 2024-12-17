@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Enums;
+using AdventOfCode.DataStructures;
+using AdventOfCode.HelperFunctions;
 
 namespace AdventOfCode
 {
@@ -11,23 +12,16 @@ namespace AdventOfCode
         private string inputFile {get; set;}
         private int Solution {get; set;}
         private List<List<string>> puzzleGrid {get; set;}
-        private Dictionary<Directions, (int, int)> DirToCoord = 
-        {
-            Directions.North = (-1, 0),
-            Directions.South = (1, 0),
-            Directions.East = (0, 1),
-            Directions.West = (0, -1),
-            Directions.NorthEast = (-1,1),
-            Directions.SouthEast = (1,1),
-            Directions.NorthWest = (-1,-1),
-            Directions.SouthWest = (1,-1)
-        };
+        private int height {get; set;}
+        private int width {get; set;}
 
         public Day4(string inputFile)
         {
             this.inputFile = inputFile;
             this.Solution = 0;
             this.puzzleGrid = new List<List<string>>();
+            this.width = 0;
+            this.height = 0;
             InputPart1Parser();
             //InputPart2Parser();
         }
@@ -47,41 +41,63 @@ namespace AdventOfCode
             // returns the number of times target is in the puzzleGrid in any direction
             int wordsFound = 0;
 
-            // TODO: in each line, search for first letter
+            // in each line, search for first letter
             // then search the 8 directions for the second letter
-            // any direction that matches sets the firection to continue searching
-            foreach (List<string> row in puzzleGrid)
+            // any direction that matches sets the direction to continue searching
+            for (int i = 0; i < puzzleGrid.Count; i++)
             {
-                foreach (string col in row)
+                for (int j = 0; j < puzzleGrid[i].Count; j++)
                 {
-                    if (string.Compare(target[0], col == 0))
+                    Coordinate curCoord = new Coordinate{row=i, col=j};
+                    
+                    if (target[0] == Convert.ToChar(puzzleGrid[i][j]))
                     {
-                        HashSet<Directions> validDirections = GetDirectionsToLook(string target[1], row, col)
-                        // TODO: hashset above has the valid directions where the second letter was found
-                        // TODO: for each direction valid, check if the next 3 locations are MAS, otherwise continue (also continue of out of bounds)
+                        // get valid next coordinates
+                        HashSet<Coordinate> validDirs = TwoDimGrid.GetNewCoordinates(curCoord, this.height, this.width);
+
+                        // get directions to look for the rest of the word
+                        HashSet<Directions> searchThis = new HashSet<Directions>();
+                        
+                        // check which are equal to second letter
+                        foreach (var step in validDirs)
+                        {
+                            if (target[1] == Convert.ToChar(puzzleGrid[step.row][step.col]))
+                            {
+                                searchThis.Add(TwoDimGrid.GetDirection(curCoord, step));
+                            }
+                        }
+                        
+                        foreach (Directions dir in searchThis)
+                        {
+                            bool wordFound = true;
+
+                            // move cursor to second letter
+                            curCoord.row = i + TwoDimGrid.DirToCoord[dir].row;
+                            curCoord.col = j + TwoDimGrid.DirToCoord[dir].col;
+                            for (int k=2; k<target.Length; k++)
+                            {
+                                Coordinate nextCoord = new Coordinate();
+                                nextCoord.row = curCoord.row + TwoDimGrid.DirToCoord[dir].row;
+                                nextCoord.col = curCoord.col + TwoDimGrid.DirToCoord[dir].col;
+                                if (target[k] != Convert.ToChar(puzzleGrid[nextCoord.row][nextCoord.col]))
+                                {
+                                    wordFound = false;
+                                    break;
+                                }
+                                else
+                                {
+                                    curCoord = nextCoord;
+                                }
+                            }
+
+                            if (wordFound)
+                                wordsFound++;
+                        }
                     }
                 }
             }
 
             return wordsFound;
-        }
-
-        private HashSet<Directions> GetDirectionsToLook(string letter, int row, int col)
-        {
-            // TODO: returns where the second letter was found. this sets where to look for the rest of the word
-            
-        }
-
-        private (int, int) NewCoordinates(int curRow, int curCol, int rowStep, int colStep)
-        {
-            // returns the new coordinates 
-            return curRow + rowStep, curCol + colStep;
-        }
-
-        private bool IsCoordinateValid(int row, int col)
-        {
-            // checks if this is a valid position within the grid
-            return row >= 0 && row < puzzleGrid.Count && col >= 0 && col < puzzleGrid[0].Count;
         }
 
         public void InputPart1Parser()
@@ -94,10 +110,13 @@ namespace AdventOfCode
                 while ((line = sr.ReadLine()) != null)
                 {
                     List<string> lineLetters = new List<string>{line};
-                    puzzleGrid.Add(lineLetters);
-
-                    this.Solution = WordSearch(targetWord);
+                    this.puzzleGrid.Add(lineLetters);  
+                    this.height += 1; 
                 }
+
+                this.width = this.puzzleGrid[0].Count; 
+
+                this.Solution = WordSearch(targetWord);
             }
         }
 
